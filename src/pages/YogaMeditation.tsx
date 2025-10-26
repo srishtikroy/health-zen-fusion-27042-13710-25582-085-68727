@@ -3,6 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Brain, Play, Clock, Star, HandMetal, Sparkles, Loader2 } from "lucide-react";
 import meditationBg from "@/assets/meditation-bg.jpg";
+import chamomileImage from "@/assets/chamomile-tea.jpg";
+import gingerImage from "@/assets/ginger-root.jpg";
+import turmericImage from "@/assets/turmeric.jpg";
+import ashwagandhaImage from "@/assets/ashwagandha.jpg";
+import holyBasilImage from "@/assets/holy-basil.jpg";
+import peppermintImage from "@/assets/peppermint.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -131,42 +137,42 @@ const YogaMeditation = () => {
       use: "Better sleep and relaxation", 
       preparation: "Steep 1-2 teaspoons dried flowers in hot water for 5-10 minutes",
       benefits: "Reduces anxiety, promotes sleep, aids digestion",
-      image: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400&h=300&fit=crop"
+      image: chamomileImage
     },
     { 
       name: "Ginger Root", 
       use: "Digestion and nausea relief", 
       preparation: "Slice fresh ginger and boil with water or steep in tea for 10 minutes",
       benefits: "Reduces inflammation, aids digestion, boosts immunity",
-      image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&h=300&fit=crop"
+      image: gingerImage
     },
     { 
       name: "Turmeric", 
       use: "Anti-inflammatory and antioxidant", 
       preparation: "Mix 1/2 tsp powder with warm milk and honey, drink before bed",
       benefits: "Reduces inflammation, supports brain health, improves joint health",
-      image: "https://images.unsplash.com/photo-1615485290001-c8c9f8f38e1e?w=400&h=300&fit=crop"
+      image: turmericImage
     },
     { 
       name: "Ashwagandha", 
       use: "Stress relief and energy", 
       preparation: "Take 300-500mg supplement twice daily or steep powder in hot water",
       benefits: "Reduces stress and anxiety, improves focus, boosts energy",
-      image: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400&h=300&fit=crop"
+      image: ashwagandhaImage
     },
     { 
       name: "Holy Basil (Tulsi)", 
       use: "Respiratory health and immunity", 
       preparation: "Steep fresh or dried leaves in hot water for 5-7 minutes",
       benefits: "Boosts immunity, reduces stress, supports respiratory system",
-      image: "https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?w=400&h=300&fit=crop"
+      image: holyBasilImage
     },
     { 
       name: "Peppermint", 
       use: "Digestive comfort and mental clarity", 
       preparation: "Steep fresh or dried leaves in boiling water for 5-10 minutes",
       benefits: "Relieves digestive discomfort, improves focus, reduces headaches",
-      image: "https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?w=400&h=300&fit=crop"
+      image: peppermintImage
     },
   ];
 
