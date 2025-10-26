@@ -186,6 +186,7 @@ const YogaMeditation = () => {
           description: "Please sign in to get personalized suggestions",
           variant: "destructive",
         });
+        setIsLoadingSuggestions(false);
         return;
       }
 
@@ -196,19 +197,45 @@ const YogaMeditation = () => {
       });
 
       if (error) {
-        throw error;
+        console.error('Function invoke error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to connect to the service. Please try again.",
+          variant: "destructive",
+        });
+        setIsLoadingSuggestions(false);
+        return;
       }
 
-      setAiSuggestions(data.suggestions);
-      toast({
-        title: "Suggestions Generated",
-        description: "Your personalized yoga and wellness tips are ready!",
-      });
+      // Handle both success and graceful error responses
+      if (data.suggestions) {
+        setAiSuggestions(data.suggestions);
+        
+        // Show success toast only if there's no error field
+        if (!data.error) {
+          toast({
+            title: "Suggestions Generated",
+            description: "Your personalized yoga and wellness tips are ready!",
+          });
+        } else {
+          // Show warning if suggestions are fallback
+          toast({
+            title: "Limited Suggestions",
+            description: data.error || "Using default suggestions",
+          });
+        }
+      } else {
+        toast({
+          title: "No Suggestions Available",
+          description: data.error || "Unable to generate suggestions at this time",
+          variant: "destructive",
+        });
+      }
     } catch (error: any) {
       console.error('Error fetching suggestions:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to generate suggestions",
+        description: "An unexpected error occurred. Please try again later.",
         variant: "destructive",
       });
     } finally {
