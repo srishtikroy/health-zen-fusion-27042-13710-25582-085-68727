@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Share2, Image as ImageIcon, Video } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
 
 interface CreatePostProps {
@@ -11,143 +17,74 @@ interface CreatePostProps {
 }
 
 export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [category, setCategory] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setMediaFiles(Array.from(e.target.files));
-    }
-  };
-
-  const uploadMedia = async (postId: string, file: File) => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${postId}/${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session?.user) throw new Error("Not authenticated");
-
-    const { error: uploadError } = await supabase.storage
-      .from("post-media")
-      .upload(`${session.session.user.id}/${filePath}`, file);
-
-    if (uploadError) throw uploadError;
-
-    const { data } = supabase.storage
-      .from("post-media")
-      .getPublicUrl(`${session.session.user.id}/${filePath}`);
-
-    const mediaType = file.type.startsWith("video/") ? "video" : "image";
-
-    await supabase.from("post_media").insert({
-      post_id: postId,
-      media_url: data.publicUrl,
-      media_type: mediaType,
-    });
-  };
-
-  const handleCreatePost = async () => {
-    if (!content.trim() && mediaFiles.length === 0) {
-      toast.error("Please add some content or media");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title || !content || !category) {
+      toast.error("Please fill in all fields");
       return;
     }
 
-    setUploading(true);
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.user) {
-        toast.error("Please sign in to create a post");
-        return;
-      }
-
-      const { data: post, error } = await supabase
-        .from("posts")
-        .insert({
-          content: content || "",
-          user_id: session.session.user.id,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Upload media files
-      for (const file of mediaFiles) {
-        await uploadMedia(post.id, file);
-      }
-
-      toast.success("Post shared with the community!");
+    setIsSubmitting(true);
+    
+    setTimeout(() => {
+      toast.success("Post created successfully!");
+      setTitle("");
       setContent("");
-      setMediaFiles([]);
+      setCategory("");
+      setIsSubmitting(false);
       onPostCreated();
-    } catch (error) {
-      console.error("Error creating post:", error);
-      toast.error("Failed to create post");
-    } finally {
-      setUploading(false);
-    }
+    }, 500);
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Plus className="h-5 w-5 text-primary" />
-          Share with Community
-        </CardTitle>
-        <CardDescription>
-          Post recipes, cooking ideas, motivation, or wellness tips
-        </CardDescription>
+        <CardTitle>Create a Post</CardTitle>
+        <CardDescription>Share your knowledge with the community</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <Textarea
-          placeholder="What would you like to share today?"
-          className="min-h-[100px] resize-none"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
-        {mediaFiles.length > 0 && (
-          <div className="text-sm text-muted-foreground">
-            {mediaFiles.length} file(s) selected
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Title</label>
+            <Input
+              placeholder="Share something interesting..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </div>
-        )}
-        <div className="flex justify-end gap-2">
-          <label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleFileChange}
-              className="hidden"
+          <div>
+            <label className="text-sm font-medium mb-2 block">Content</label>
+            <Textarea
+              placeholder="Write your post here..."
+              className="min-h-[100px]"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
             />
-            <Button type="button" variant="outline" className="gap-2" asChild>
-              <span>
-                <ImageIcon className="h-4 w-4" />
-                Add Image
-              </span>
-            </Button>
-          </label>
-          <label>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-            <Button type="button" variant="outline" className="gap-2" asChild>
-              <span>
-                <Video className="h-4 w-4" />
-                Add Video
-              </span>
-            </Button>
-          </label>
-          <Button onClick={handleCreatePost} className="gap-2" disabled={uploading}>
-            <Share2 className="h-4 w-4" />
-            {uploading ? "Posting..." : "Share Post"}
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Category</label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="motivation">Motivation</SelectItem>
+                <SelectItem value="recipe">Recipe</SelectItem>
+                <SelectItem value="tip">Tip</SelectItem>
+                <SelectItem value="question">Question</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Posting..." : "Post to Community"}
           </Button>
-        </div>
+        </form>
       </CardContent>
     </Card>
   );

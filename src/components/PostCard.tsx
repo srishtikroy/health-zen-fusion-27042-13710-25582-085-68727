@@ -1,141 +1,59 @@
-import { useState } from "react";
+import { Heart, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Heart, MessageCircle, Share2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { Post } from "@/hooks/useCommunityPosts";
 import { CommentSection } from "./CommentSection";
-import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
 
 interface PostCardProps {
   post: Post;
-  currentUserId?: string;
+  currentUserId: string | null;
 }
 
 export const PostCard = ({ post, currentUserId }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
-  const [isLiked, setIsLiked] = useState(
-    post.post_likes.some((like) => like.user_id === currentUserId)
-  );
+  const [liked, setLiked] = useState(post.user_liked);
+  const [likesCount, setLikesCount] = useState(post.likes);
 
-  const handleLike = async () => {
-    if (!currentUserId) {
-      toast.error("Please sign in to like posts");
-      return;
-    }
-
-    try {
-      if (isLiked) {
-        await supabase
-          .from("post_likes")
-          .delete()
-          .eq("post_id", post.id)
-          .eq("user_id", currentUserId);
-        setIsLiked(false);
-      } else {
-        await supabase.from("post_likes").insert({
-          post_id: post.id,
-          user_id: currentUserId,
-        });
-        setIsLiked(true);
-      }
-    } catch (error) {
-      console.error("Error toggling like:", error);
-      toast.error("Failed to update like");
-    }
+  const handleLike = () => {
+    setLiked(!liked);
+    setLikesCount(liked ? likesCount - 1 : likesCount + 1);
   };
-
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success("Link copied to clipboard!");
-  };
-
-  const initials = post.user_name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
 
   return (
-    <Card className="hover:shadow-[var(--shadow-soft)] transition-all">
+    <Card>
       <CardHeader>
-        <div className="flex items-start gap-4">
-          <Avatar className="h-12 w-12 border-2 border-primary/20">
-            <AvatarFallback className="bg-[image:var(--wellness-gradient)] text-primary-foreground font-semibold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <p className="font-semibold">{post.user_name}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold">{post.title}</h3>
             <p className="text-sm text-muted-foreground">
-              {formatDistanceToNow(new Date(post.created_at), {
-                addSuffix: true,
-              })}
+              by {post.user_name} • {new Date(post.created_at).toLocaleDateString()}
             </p>
           </div>
+          <Badge>{post.category}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {post.content && (
-          <p className="text-foreground leading-relaxed">{post.content}</p>
-        )}
-
-        {/* Media Display */}
-        {post.post_media.length > 0 && (
-          <div className="grid grid-cols-1 gap-2">
-            {post.post_media.map((media) => (
-              <div key={media.id} className="rounded-lg overflow-hidden">
-                {media.media_type === "image" ? (
-                  <img
-                    src={media.media_url}
-                    alt="Post media"
-                    className="w-full h-auto object-cover max-h-[500px]"
-                  />
-                ) : (
-                  <video
-                    src={media.media_url}
-                    controls
-                    className="w-full h-auto max-h-[500px]"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="flex items-center gap-6 pt-2 border-t border-border">
+        <p className="text-foreground">{post.content}</p>
+        
+        <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
-            className={`gap-2 ${
-              isLiked
-                ? "text-destructive"
-                : "text-muted-foreground hover:text-destructive"
-            }`}
             onClick={handleLike}
+            className={liked ? "text-primary" : ""}
           >
-            <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
-            <span>{post.post_likes.length}</span>
+            <Heart className={`h-4 w-4 mr-1 ${liked ? "fill-current" : ""}`} />
+            {likesCount}
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 text-muted-foreground hover:text-primary"
             onClick={() => setShowComments(!showComments)}
           >
-            <MessageCircle className="h-4 w-4" />
-            <span>{post.post_comments.length}</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2 text-muted-foreground hover:text-accent"
-            onClick={handleShare}
-          >
-            <Share2 className="h-4 w-4" />
-            Share
+            <MessageCircle className="h-4 w-4 mr-1" />
+            {post.comments}
           </Button>
         </div>
 
